@@ -8,6 +8,7 @@
 # ASCII art by Brett Bohnenkamper <kittykatt@silverirc.com>
 # Changes Jerome Launay <jerome@projet-libre.org>
 # Fedora support by YeOK <yeok@henpen.org>
+# Raspbian support by Manganar <pimanganar@gmail.com>
 
 # Distributed under the terms of the GNU General Public License v3.
 # See http://www.gnu.org/licenses/gpl.txt for the full license text.
@@ -21,19 +22,19 @@ from time import ctime, sleep
 
 # Display [Comment/Uncomment to Enable/Disable information.]
 display = [
- 'user', 	# Display Username
- 'hostname',	# Display Machine Hostname
- 'distro', 	# Display Distribution
- 'kernel',  	# Display Kernel Version
- 'uptime', 	# Display System Uptime
- 'wm',  	# Display Window Manager
- 'de', 		# Display Desktop Environment
- 'sh', 		# Display Current Shell
- 'term', 	# Display Current Terminal
- 'packages', 	# Display Number of Packages Installed
- 'cpu', 	# Display CPU Model
- 'ram', 	# Display RAM Usage
- 'disk' 	# Display Disk Usage
+ 'user', # Display Username
+ 'hostname', # Display Machine Hostname
+ 'distro', # Display Distribution
+ 'kernel',  # Display Kernel Version
+ 'uptime',  # Display System Uptime
+ 'wm',  # Display Window Manager
+ 'de', # Display Desktop Environment
+ 'sh', # Display Current Shell
+ 'term', # Display Current Terminal
+ 'packages', # Display Number of Packages Installed
+ 'cpu', # Display CPU Model
+ 'ram', # Display RAM Usage
+ 'disk' # Display Disk Usage
  ]
 
 # Array containing Values
@@ -41,7 +42,9 @@ result = []
 
 # Options
 if __name__=='__main__':
- parser = OptionParser(usage='%prog', description='Archey is a system information tool written in Python.', version="%prog 0.2.8")
+ parser = OptionParser(usage='%prog [-s, --screenshot]', description='Archey is a system information tool written in Python.', version="%prog 0.2.8")
+ parser.add_option('-s', '--screenshot',
+  action='store_true', dest='screenshot', help='take a screenshot')
  (options, args) = parser.parse_args()
 
 # Define processes for identifying Desktop Environmentss, Window Managers, Shells.
@@ -67,6 +70,7 @@ wm_dict = {
  'openbox': 'Openbox',
  'pekwm': 'PekWM',
  'ratpoison': 'ratpoison',
+ 'scrotwm': 'ScrotWM',
  'wmaker': 'Window Maker',
  'wmfs': 'Wmfs',
  'wmii': 'wmii',
@@ -111,7 +115,7 @@ p1 = Popen(['ps', '-u', getuser()], stdout=PIPE).communicate()[0].split('\n')
 processes = map(xmonadfix, [process.split()[3] for process in p1 if process])
 p1 = None
 
-# Find Distro.
+# Find Distro. (Manganar: Added support for Raspbian Aug-16)
 DetectDistro = Popen(['lsb_release', '-i'], stdout=PIPE).communicate()[0].split(':')[1].lstrip('\t').rstrip('\n')
 
 # Print coloured key with normal value.
@@ -128,13 +132,18 @@ def output(key, value):
   output = '%s%s:%s %s' % (whiteN, key, clear, value)
  if DetectDistro == 'LinuxMint':
   output = '%s%s:%s %s' % (greenB, key, clear, value) 
+ if DetectDistro == 'Raspbian':
+  output = '%s%s:%s %s' % (redB, key, clear, value) 
  result.append(output)
 
 # RAM Function.
+# Manganar: The used calculation on Ubuntu gave a negative figure.
+# Seemed overly complex. Now just takes "used" from the call to free -m, instead of:
+# used = int(ram[2]) - int(ram[5]) - int(ram[6])
 def ram_display():
  raminfo = Popen(['free', '-m'], stdout=PIPE).communicate()[0].split('\n')
  ram = ''.join(filter(re.compile('M').search, raminfo)).split()
- used = int(ram[2]) - int(ram[5]) - int(ram[6])
+ used = int(ram[2])
  usedpercent = ((float(used) / float(ram[1])) * 100)
  if usedpercent <= 33:
   ramdisplay = '%s%s MB %s/ %s MB' % (greenB, used, clear, ram[1])
@@ -146,12 +155,29 @@ def ram_display():
   ramdisplay = '%s%s MB %s/ %s MB' % (redB, used, clear, ram[1])
   output('RAM', ramdisplay)
   
+# Screenshot Function.
+screen = '%s' % options.screenshot
+def screenshot():
+ print 'Taking shot in',
+ list = range(1,6)
+ list.reverse()
+ for x in list:
+   print '%s..' % x,
+   sys.stdout.flush()
+   sleep(1)
+ print 'Say Cheeze!'
+ subprocess.check_call(['scrot'])
+
 # Operating System Function.
+# Manganar: Add a branch for Raspbian - a copy of Debian.
 def distro_display(): 
  arch = Popen(['uname', '-m'], stdout=PIPE).communicate()[0].rstrip('\n')
  if DetectDistro == 'Debian':
   release = Popen(['lsb_release', '-r'], stdout=PIPE).communicate()[0].split(':')[1].lstrip('\t').rstrip('\n')
   distro = 'Debian %s %s' % (release, arch)
+ if DetectDistro == 'Raspbian':
+  release = Popen(['lsb_release', '-r'], stdout=PIPE).communicate()[0].split(':')[1].lstrip('\t').rstrip('\n')
+  distro = 'Raspbian %s %s' % (release, arch)
  if DetectDistro == 'Ubuntu':
   release = Popen(['lsb_release', '-r'], stdout=PIPE).communicate()[0].split(':')[1].lstrip('\t').rstrip('\n')
   distro = 'Ubuntu %s %s' % (release, arch)
@@ -182,9 +208,13 @@ def hostname_display():
  output('Hostname', hostname)
 
 # CPU Function.
+# Manganar: Model is in file[4] of /proc/cpuinfo for most distributions.
+# However, for Raspbian, it is in file[1]. Added a condition to correct if needed.
 def cpu_display():
  file = open('/proc/cpuinfo').readlines()
  cpuinfo = re.sub('  +', ' ', file[4].replace('model name\t: ', '').rstrip('\n'))
+ if DetectDistro == 'Raspbian':
+  cpuinfo = re.sub('  +', ' ', file[1].replace('model name\t: ', '').rstrip('\n'))
  output ('CPU', cpuinfo) 
 
 # Uptime Function.
@@ -228,6 +258,7 @@ def term_display():
  output ('Terminal', term)
 
 # Packages Function.
+# Manganar: Added a branch for Raspbian - a copy of Debian.
 def packages_display():
  if DetectDistro == 'Ubuntu':
   p1 = Popen(['dpkg', '--get-selections'], stdout=PIPE)
@@ -235,6 +266,12 @@ def packages_display():
   p3 = Popen(['wc', '-l'], stdin=p2.stdout, stdout=PIPE)
   packages = p3.communicate()[0].rstrip('\n')
   output ('Packages', packages)
+ if DetectDistro == 'Raspbian':
+  p1 = Popen(['dpkg', '--get-selections'], stdout=PIPE)
+  p2 = Popen(['grep', '-v', 'deinstall'], stdin=p1.stdout, stdout=PIPE)
+  p3 = Popen(['wc', '-l'], stdin=p2.stdout, stdout=PIPE)
+  packages = p3.communicate()[0].rstrip('\n')
+  output ('Packages', packages)  
  if DetectDistro == 'Arch':
   p1 = Popen(['pacman', '-Q'], stdout=PIPE)
   p2 = Popen(['wc', '-l'], stdin=p1.stdout, stdout=PIPE)
@@ -264,12 +301,24 @@ def packages_display():
   output ('Packages', packages)
 
 # Disk Function.
+# Manganar: Requests disk space in human readable form, then ignores units.
+# Treats terabytes as gigabytes. Hack below multiplies capacity by 1024 if needed.
 def disk_display():
  p1 = Popen(['df', '-Tlh', '--total', '-t', 'ext4', '-t', 'ext3', '-t', 'ext2', '-t', 'reiserfs', '-t', 'jfs', '-t', 'ntfs', '-t', 'fat32', '-t', 'btrfs', '-t', 'fuseblk'], stdout=PIPE).communicate()[0]
  total = p1.splitlines()[-1]
  used = total.split()[3]
  size = total.split()[2]
- usedpercent = float(re.sub("[A-Z]", "", used)) / float(re.sub("[A-Z]", "", size)) * 100
+ 
+ scaledSize = float(re.sub("[A-Z]", "", size))
+ if size[len(size)-1] == 'T':
+  scaledSize = scaledSize * 1024
+ 
+ scaledUsed = float(re.sub("[A-Z]", "", used))
+ if used[len(used)-1] == 'T':
+  scaledUsed = scaledUsed * 1024
+ 
+ usedpercent = scaledUsed / scaledSize * 100
+  
  if usedpercent <= 33:
   fs = '%s%s %s/ %s' % (greenB, used, clear, size)  
   output ('Disk', fs) 
@@ -279,7 +328,6 @@ def disk_display():
  if usedpercent >= 67:
   fs = '%s%s %s/ %s' % (redB, used, clear, size)  
   output ('Disk', fs) 
-	  
  
 # Run functions found in 'display' array.
 for x in display:
@@ -421,3 +469,22 @@ if DetectDistro == 'LinuxMint':
 %s                                     %s
 %s""" % ( whiteB, result[0], whiteB, result[1], whiteB, result[2], whiteB, greenB, whiteB, result[3], whiteB, greenB, whiteB, result[4], whiteB, greenB, whiteB, result[5], whiteB, greenB, whiteB, result[6], whiteB, greenB, whiteB, result[7], whiteB, greenB, whiteB, result[8], whiteB, greenB, whiteB, result[9], whiteB, greenB, whiteB, result[10], whiteB, greenB, whiteB, result[11], whiteB, greenB, whiteB, result[12], whiteB, greenB, whiteB, result[13], whiteB, result[14], whiteB, result[15], whiteB, result[16], whiteB, result[17], clear )
 
+# Manganar: Added a Raspbian ASCII art - not ideal, but it'll do.
+if DetectDistro == 'Raspbian':
+ print """%s
+%s                        %s
+%s       .~~.   .~~.      %s
+%s      '. \ ' ' / .'     %s
+%s       .~ .~~~..~.      %s
+%s      : .~.'~'.~. :     %s
+%s     ~ (   ) (   ) ~    %s
+%s    ( : '~'.~.'~' : )   %s
+%s     ~ .~ (   ) ~. ~    %s
+%s      (  : '~' :  )     %s
+%s       '~ .~~~. ~'      %s
+%s           '~'          %s
+%s                        %s
+%s """ % (redB, redB, result[0], greenB, result[1], greenB, result[2], redB, result[3], redB, result[4], redB, result[5], redB, result[6], redB, result[7], redB, result[8], redB, result[9], redB, result[10], redB, result[11], clear) 
+
+if screen == 'True':
+ screenshot()
