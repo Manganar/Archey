@@ -1,17 +1,10 @@
 # Archey
 
-Archey [version 0.2.8]
-Archey is a system information tool written in Python.
+A fork of Archey, a system information tool written in Python.
 
-Maintained by Melik Manukyan <melik@archlinux.us>
+Based on an original version by Melik Manukyan <melik@archlinux.us>, with ASCII art by Brett Bohnenkamper <kittykatt@silverirc.com>, and additional contributions by Jerome Launay <jerome@projet-libre.org> and YeOK <yeok@henpen.org>.
 
-ASCII art by Brett Bohnenkamper <kittykatt@silverirc.com>
-
-Changes Jerome Launay <jerome@projet-libre.org>
-
-Fedora support by YeOK <yeok@henpen.org>
-
-Raspbian support by Manganar <pimanganar@gmail.com>
+Extensive changes by by Manganar <pimanganar@gmail.com>
 
 ---
 
