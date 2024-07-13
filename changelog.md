@@ -23,6 +23,9 @@ To identify the RAM on a Raspberry Pi, use this in the revision decoding:
 
 Updates by Manganar: ########################################################
 
+Jul-24:   Modified to address issue with warnings from Python 3.12+ relating 
+          to the use of the '\' character in string literals.
+
 Jan-24:   Changed Distro ID to be a number rather than text using an enum.
           Arch: Confirmed support and updated installer.
           Added support for BunsenLabs.

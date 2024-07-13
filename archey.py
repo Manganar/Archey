@@ -617,9 +617,9 @@ def DefineDistroLogo(LogoID):
 
         DistroLogo     = [f"{redB}              ,        ,"]
         DistroLogo.append(f"{redB}             /(        )`")
-        DistroLogo.append(f"{redB}             \ \___   / |")
+        DistroLogo.append(f"{redB}             \\ \\___   / |")
         DistroLogo.append(f"{redB}             /- {whiteB}_{redB}  `-/  '")
-        DistroLogo.append(f"{redB}            ({whiteB}/\/ \{redB} \   /\\")
+        DistroLogo.append(f"{redB}            ({whiteB}/\\/ \\{redB} \\   /\\")
         DistroLogo.append(f"{whiteB}            / /   |{redB} `    \\")
         DistroLogo.append(f"{blueB}            O O   {whiteB}){redB} /    |")
         DistroLogo.append(f"{whiteB}            `-^--'{redB}`<     '")
@@ -627,11 +627,11 @@ def DefineDistroLogo(LogoID):
         DistroLogo.append(f"{redB}            `.___/`    /")
         DistroLogo.append(f"{redB}              `-----' /")
         DistroLogo.append(f"{yellowB} <----.{redB}     __ / __   \\")
-        DistroLogo.append(f"{yellowB} <----|===={redB}O))){yellowB}=={redB}) \) /{yellowB}====")
+        DistroLogo.append(f"{yellowB} <----|===={redB}O))){yellowB}=={redB}) \\) /{yellowB}====")
         DistroLogo.append(f"{yellowB} <----'{redB}    `--' `.__,' \\")
         DistroLogo.append(f"{redB}              |        |")
-        DistroLogo.append(f"{redB}               \       /      /\\")
-        DistroLogo.append(f"{cyanB}         ______{redB}( (_  / \______/")
+        DistroLogo.append(f"{redB}               \\       /      /\\")
+        DistroLogo.append(f"{cyanB}         ______{redB}( (_  / \\______/")
         DistroLogo.append(f"{cyanB}       ,'  ,-----'   |")
         DistroLogo.append(f"{cyanB}       `--(__________){clear}")
 
@@ -758,8 +758,8 @@ def ram_display():
 
         RAMUsedInfo = GetCommandOutputList(['vm_stat'])
         for EachVM_StatItem in RAMUsedInfo:
-            WorkingLine = re.sub("\.", "", EachVM_StatItem)     # Remove trailing full stop.
-            SplitLine = WorkingLine.split(":")                  # Split at the colon.
+            WorkingLine = re.sub(r"\.", "", EachVM_StatItem)     # Remove trailing full stop.
+            SplitLine = WorkingLine.split(":")                   # Split at the colon.
             if re.search(" wired", SplitLine[0]):
                 VM_Wired = int(SplitLine[1])
             if re.search(" active", SplitLine[0]):
