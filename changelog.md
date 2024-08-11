@@ -25,6 +25,7 @@ Updates by Manganar: ########################################################
 
 Jul-24:   Modified to address issue with warnings from Python 3.12+ relating 
           to the use of the '\' character in string literals.
+          Prepending a string literal with r (raw string) can fix it, or escaping any \ characters.
 
 Jan-24:   Changed Distro ID to be a number rather than text using an enum.
           Arch: Confirmed support and updated installer.
